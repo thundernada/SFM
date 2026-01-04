@@ -1,5 +1,4 @@
 import streamlit as st
-from auth import check_password
 
 # ===============================
 # إعدادات الصفحة
@@ -10,9 +9,28 @@ st.set_page_config(
 )
 
 # ===============================
-# حماية الدخول
+# حماية الدخول (داخل نفس الملف)
 # ===============================
-if not check_password():
+PROJECT_PASSWORD = "EGISF2026"
+
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+if not st.session_state["authenticated"]:
+    st.title("🔒 Secure Project Access")
+
+    password = st.text_input(
+        "Enter Project Password",
+        type="password"
+    )
+
+    if st.button("Login"):
+        if password == PROJECT_PASSWORD:
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Incorrect password")
+
     st.stop()
 
 # ===============================
@@ -61,7 +79,7 @@ st.markdown("---")
 # ===============================
 # إدخال الأوزان
 # ===============================
-st.header("⚖️ إدخال الأوزان (يجب أن يكون المجموع = 1.00)")
+st.header("⚖️ إدخال الأوزان (المجموع = 1.00)")
 
 weight_economic = st.number_input(
     "وزن البُعد الاقتصادي",
@@ -91,41 +109,31 @@ total_weight = round(
     weight_economic + weight_social + weight_environmental, 2
 )
 
-st.markdown(f"""
-**مجموع الأوزان الحالي:** `{total_weight}`
-""")
+st.markdown(f"**مجموع الأوزان:** `{total_weight}`")
 
-# ===============================
-# التحقق من المنطق
-# ===============================
 if total_weight != 1.00:
-    st.error("❌ مجموع الأوزان يجب أن يساوي 1.00 بالضبط")
+    st.error("❌ مجموع الأوزان يجب أن يساوي 1.00")
     st.stop()
 
-st.success("✔️ الأوزان سليمة – يمكن الحساب")
+st.success("✔️ الأوزان سليمة")
 
 st.markdown("---")
 
 # ===============================
 # الحساب
 # ===============================
-sfm_score = (
+sfm_score = round(
     economic * weight_economic +
     social * weight_social +
-    environmental * weight_environmental
+    environmental * weight_environmental,
+    2
 )
 
-sfm_score = round(sfm_score, 2)
-
-# ===============================
-# النتيجة
-# ===============================
 st.header("📊 النتيجة")
-
 st.metric("Smart Feasibility Score (SFM)", f"{sfm_score} / 100")
 
 # ===============================
-# منطق القرار
+# القرار
 # ===============================
 if sfm_score >= 70:
     decision = "GO ✅"
@@ -133,11 +141,11 @@ if sfm_score >= 70:
     color = "green"
 elif sfm_score >= 50:
     decision = "REVIEW ⚠️"
-    explanation = "المشروع يحتاج مراجعة وتحسين قبل اتخاذ القرار."
+    explanation = "المشروع يحتاج مراجعة وتحسين."
     color = "orange"
 else:
     decision = "STOP ❌"
-    explanation = "المشروع لا يحقق الحد الأدنى من الجدوى الذكية."
+    explanation = "المشروع لا يحقق الحد الأدنى من الجدوى."
     color = "red"
 
 st.markdown(f"""
@@ -146,19 +154,3 @@ st.markdown(f"""
 
 {explanation}
 """, unsafe_allow_html=True)
-
-st.markdown("---")
-
-# ===============================
-# شفافية المنطق
-# ===============================
-st.markdown(f"""
-### 🧠 منطق الحساب المستخدم
-
-**SFM =**  
-({economic} × {weight_economic})  
-+ ({social} × {weight_social})  
-+ ({environmental} × {weight_environmental})
-
-> مجموع الأوزان = **1.00**
-""")
