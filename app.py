@@ -9,7 +9,7 @@ st.set_page_config(
 )
 
 # ===============================
-# حماية الدخول (داخل نفس الملف)
+# حماية الدخول (بدون auth.py)
 # ===============================
 PROJECT_PASSWORD = "EGISF2026"
 
@@ -19,10 +19,7 @@ if "authenticated" not in st.session_state:
 if not st.session_state["authenticated"]:
     st.title("🔒 Secure Project Access")
 
-    password = st.text_input(
-        "Enter Project Password",
-        type="password"
-    )
+    password = st.text_input("Enter Project Password", type="password")
 
     if st.button("Login"):
         if password == PROJECT_PASSWORD:
@@ -42,8 +39,7 @@ st.subheader("Luxury · Unique · Value")
 st.markdown("""
 هذا النموذج هو النسخة التشغيلية الأولى من  
 **نموذج الجدوى الذكية (SFM)**  
-ويعتمد على إدخال يدوي كامل للأرقام والأوزان  
-لضمان المرونة السيادية في اتخاذ القرار.
+ويعتمد على إدخال يدوي كامل للأرقام والأوزان.
 """)
 
 st.markdown("---")
@@ -53,26 +49,9 @@ st.markdown("---")
 # ===============================
 st.header("🔢 إدخال الدرجات")
 
-economic = st.number_input(
-    "الدرجة الاقتصادية (0 – 100)",
-    min_value=0.0,
-    max_value=100.0,
-    value=50.0
-)
-
-social = st.number_input(
-    "الدرجة الاجتماعية (0 – 100)",
-    min_value=0.0,
-    max_value=100.0,
-    value=50.0
-)
-
-environmental = st.number_input(
-    "الدرجة البيئية (0 – 100)",
-    min_value=0.0,
-    max_value=100.0,
-    value=50.0
-)
+economic = st.number_input("الدرجة الاقتصادية (0 – 100)", 0.0, 100.0, 50.0)
+social = st.number_input("الدرجة الاجتماعية (0 – 100)", 0.0, 100.0, 50.0)
+environmental = st.number_input("الدرجة البيئية (0 – 100)", 0.0, 100.0, 50.0)
 
 st.markdown("---")
 
@@ -81,37 +60,14 @@ st.markdown("---")
 # ===============================
 st.header("⚖️ إدخال الأوزان (المجموع = 1.00)")
 
-weight_economic = st.number_input(
-    "وزن البُعد الاقتصادي",
-    min_value=0.0,
-    max_value=1.0,
-    value=0.40,
-    step=0.05
-)
+w_e = st.number_input("وزن البُعد الاقتصادي", 0.0, 1.0, 0.4, 0.05)
+w_s = st.number_input("وزن البُعد الاجتماعي", 0.0, 1.0, 0.3, 0.05)
+w_env = st.number_input("وزن البُعد البيئي", 0.0, 1.0, 0.3, 0.05)
 
-weight_social = st.number_input(
-    "وزن البُعد الاجتماعي",
-    min_value=0.0,
-    max_value=1.0,
-    value=0.30,
-    step=0.05
-)
+total = round(w_e + w_s + w_env, 2)
+st.write(f"**مجموع الأوزان:** {total}")
 
-weight_environmental = st.number_input(
-    "وزن البُعد البيئي",
-    min_value=0.0,
-    max_value=1.0,
-    value=0.30,
-    step=0.05
-)
-
-total_weight = round(
-    weight_economic + weight_social + weight_environmental, 2
-)
-
-st.markdown(f"**مجموع الأوزان:** `{total_weight}`")
-
-if total_weight != 1.00:
+if total != 1.0:
     st.error("❌ مجموع الأوزان يجب أن يساوي 1.00")
     st.stop()
 
@@ -122,35 +78,33 @@ st.markdown("---")
 # ===============================
 # الحساب
 # ===============================
-sfm_score = round(
-    economic * weight_economic +
-    social * weight_social +
-    environmental * weight_environmental,
+sfm = round(
+    economic * w_e +
+    social * w_s +
+    environmental * w_env,
     2
 )
 
 st.header("📊 النتيجة")
-st.metric("Smart Feasibility Score (SFM)", f"{sfm_score} / 100")
+st.metric("SFM Score", f"{sfm} / 100")
 
 # ===============================
 # القرار
 # ===============================
-if sfm_score >= 70:
+if sfm >= 70:
     decision = "GO ✅"
-    explanation = "المشروع يحقق جدوى ذكية مرتفعة ويُنصح بالاستمرار."
+    explanation = "المشروع يحقق جدوى ذكية مرتفعة."
     color = "green"
-elif sfm_score >= 50:
+elif sfm >= 50:
     decision = "REVIEW ⚠️"
-    explanation = "المشروع يحتاج مراجعة وتحسين."
+    explanation = "المشروع يحتاج مراجعة."
     color = "orange"
 else:
     decision = "STOP ❌"
-    explanation = "المشروع لا يحقق الحد الأدنى من الجدوى."
+    explanation = "المشروع غير مجدي حاليًا."
     color = "red"
 
-st.markdown(f"""
-### 🧭 القرار النهائي
-<span style="color:{color}; font-size:22px;"><strong>{decision}</strong></span>
-
-{explanation}
-""", unsafe_allow_html=True)
+st.markdown(
+    f"<h3 style='color:{color}'>{decision}</h3><p>{explanation}</p>",
+    unsafe_allow_html=True
+)
